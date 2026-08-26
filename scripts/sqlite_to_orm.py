@@ -23,8 +23,8 @@ from sqlglot.expressions import (
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from sqlglot.expressions.datatypes import DType
 
-__version__ = "1.0.35"
 
 MAX_LINE_LENGTH = 100
 
@@ -52,7 +52,7 @@ def parse_decimal(kind: DataType) -> tuple[str, str]:
     return "float", f"Numeric({prec}, {scale})"
 
 
-SQL_TYPE_MAP: dict[DataType.Type, tuple[str, str] | Callable[[DataType], tuple[str, str]]] = {
+SQL_TYPE_MAP: dict[DType, tuple[str, str] | Callable[[DataType], tuple[str, str]]] = {
     DataType.Type.VARCHAR: parse_varchar,
     DataType.Type.TEXT: ("str", "Text()"),
     DataType.Type.SMALLINT: ("int", "SmallInteger()"),
@@ -63,14 +63,17 @@ SQL_TYPE_MAP: dict[DataType.Type, tuple[str, str] | Callable[[DataType], tuple[s
 }
 
 
-def convert_sqlite_to_orm(input_path: Path, output_path: Path, dialect: str = "sqlite") -> None:  # noqa: C901, PLR0912, PLR0915
+def convert_sqlite_to_orm(  # noqa: C901, PLR0912, PLR0915
+    input_path: Path, output_path: Path, chembl_version: str, dialect: str = "sqlite"
+) -> None:
     """Convert a SQLite database to an ORM schema."""
-    expressions = sqlglot.parse(input_path.read_text(), read=dialect)
-    if not all(isinstance(node, Create) for node in expressions):
+    parsed = sqlglot.parse(input_path.read_text(), read=dialect)
+    if not all(isinstance(node, Create) for node in parsed):
         raise ValueError("Input file must contain only CREATE TABLE statements.")
+    expressions = [node for node in parsed if isinstance(node, Create)]
 
     header = textwrap.dedent(f'''\
-    """ORM schema."""
+    """ORM schema for ChEMBL {chembl_version}."""
     # ruff: noqa: E501
 
     from __future__ import annotations
@@ -90,8 +93,6 @@ def convert_sqlite_to_orm(input_path: Path, output_path: Path, dialect: str = "s
         UniqueConstraint,
     )
     from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-
-    __version__ = "{__version__}"
 
 
     class Base(DeclarativeBase):
@@ -120,7 +121,7 @@ def convert_sqlite_to_orm(input_path: Path, output_path: Path, dialect: str = "s
         table_indexes.setdefault(table, []).append(index)
 
     for expr in tables:
-        table: str = expr.this.this.name
+        table = expr.this.this.name
         if table.startswith("sqlite_"):
             continue
         class_name = "".join(word.capitalize() for word in table.split("_"))
@@ -129,28 +130,30 @@ def convert_sqlite_to_orm(input_path: Path, output_path: Path, dialect: str = "s
         lines.append("")
         lines.append(f'    __tablename__ = "{table}"')
 
-        if not all(isinstance(expr, (ColumnDef, Constraint)) for expr in expr.expressions):
+        if not all(
+            isinstance(expr, (ColumnDef, Constraint)) for expr in expr.expressions
+        ):  # pragma: no cover
             raise ValueError("Invalid table definition: only columns and constraints allowed")
 
         primary_key: list[str] = []
         table_args: list[str] = []
 
         for const in expr.find_all(Constraint):
-            if len(const.expressions) != 1:
+            if len(const.expressions) != 1:  # pragma: no cover
                 raise ValueError("Invalid constraint definition: only single expression allowed")
             name = const.this.this
             this = const.expressions[0]
             if isinstance(this, PrimaryKey):
                 if primary_key:
                     raise ValueError("Multiple primary keys found")
-                primary_key.extend(col.this.this.this for col in this.expressions)
+                primary_key.extend(col.name for col in this.expressions)
                 quoted = [f'"{col}"' for col in primary_key]
                 table_args.append(f'PrimaryKeyConstraint({", ".join(quoted)}, name="{name}")')
             elif isinstance(this, UniqueColumnConstraint):
-                cols: list[str] = [f'"{ident.this}"' for ident in this.this.expressions]
-                table_args.append(f'UniqueConstraint({", ".join(cols)}, name="{name}")')
+                unique_cols = [f'"{ident.this}"' for ident in this.this.expressions]
+                table_args.append(f'UniqueConstraint({", ".join(unique_cols)}, name="{name}")')
             elif isinstance(this, CheckColumnConstraint):
-                if not len(const.expressions) == 1:
+                if not len(const.expressions) == 1:  # pragma: no cover
                     raise ValueError("Only one column allowed in check constraint")
                 const_expr = const.expressions[0]
                 table_args.append(f'CheckConstraint("{const_expr.this}", name="{name}")')
@@ -171,7 +174,7 @@ def convert_sqlite_to_orm(input_path: Path, output_path: Path, dialect: str = "s
                     f'ForeignKeyConstraint([{", ".join(curr_cols)}], [{", ".join(ref_cols)}], name="{name}"{option_str})'  # noqa: E501
                 )
             else:
-                raise TypeError(f"Unknown constraint {this}")
+                raise TypeError(f"Unknown constraint {this}")  # pragma: no cover
 
         table_args.extend(table_indexes.get(table, []))
 
@@ -184,13 +187,15 @@ def convert_sqlite_to_orm(input_path: Path, output_path: Path, dialect: str = "s
 
         for col in expr.find_all(ColumnDef):
             col_name = col.name
-            if col.kind.this not in SQL_TYPE_MAP:
-                raise TypeError(f"Unknown column type {col.kind}")
-            type_cb = SQL_TYPE_MAP[col.kind.this]
+            kind = col.kind
+            assert kind is not None  # noqa: S101
+            if kind.this not in SQL_TYPE_MAP:
+                raise TypeError(f"Unknown column type {kind}")
+            type_cb = SQL_TYPE_MAP[kind.this]
             if callable(type_cb):
-                map_python, map_alchemy = type_cb(col.kind)
+                map_python, map_alchemy = type_cb(kind)
             else:
-                if col.kind.expressions:
+                if kind.expressions:
                     raise ValueError("Simple mapping types should not have expressions")
                 map_python, map_alchemy = type_cb
             can_be_null = True

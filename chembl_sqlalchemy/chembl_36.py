@@ -1,4 +1,4 @@
-"""ORM schema."""
+"""ORM schema for ChEMBL 36."""
 # ruff: noqa: E501
 
 from __future__ import annotations
@@ -18,8 +18,6 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-
-__version__ = "1.0.35"
 
 
 class Base(DeclarativeBase):
@@ -102,6 +100,7 @@ class Source(Base):
     src_short_name: Mapped[str | None] = mapped_column(String(20))
     src_comment: Mapped[str | None] = mapped_column(String(1200))
     src_url: Mapped[str | None] = mapped_column(String(200))
+    ddid_pattern: Mapped[str | None] = mapped_column(String(2000))
 
 
 class RelationshipType(Base):
@@ -160,7 +159,7 @@ class DataValidityLookup(Base):
     """ORM class for data_validity_lookup."""
 
     __tablename__ = "data_validity_lookup"
-    __table_args__ = (PrimaryKeyConstraint("data_validity_comment", name="sys_c00167991"),)
+    __table_args__ = (PrimaryKeyConstraint("data_validity_comment", name="sys_c00183082"),)
     data_validity_comment: Mapped[str] = mapped_column(String(30))
     description: Mapped[str | None] = mapped_column(String(200))
 
@@ -232,7 +231,7 @@ class BioComponentSequences(Base):
         Index("bio_component_seqs_pk", "component_id", unique=True),
     )
     component_id: Mapped[int] = mapped_column(BigInteger())
-    component_type: Mapped[str] = mapped_column(String(50))
+    component_type: Mapped[str | None] = mapped_column(String(50))
     description: Mapped[str | None] = mapped_column(String(200))
     sequence: Mapped[str | None] = mapped_column(Text())
     sequence_md5sum: Mapped[str | None] = mapped_column(String(32))
@@ -356,78 +355,6 @@ class Products(Base):
     nda_type: Mapped[str | None] = mapped_column(String(10))
 
 
-class FracClassification(Base):
-    """ORM class for frac_classification."""
-
-    __tablename__ = "frac_classification"
-    __table_args__ = (
-        PrimaryKeyConstraint("frac_class_id", name="frac_classification_pk"),
-        UniqueConstraint("level5", name="uk_frac_class_l5"),
-    )
-    frac_class_id: Mapped[int] = mapped_column(BigInteger())
-    active_ingredient: Mapped[str] = mapped_column(String(500))
-    level1: Mapped[str] = mapped_column(String(2))
-    level1_description: Mapped[str] = mapped_column(String(2000))
-    level2: Mapped[str] = mapped_column(String(2))
-    level2_description: Mapped[str | None] = mapped_column(String(2000))
-    level3: Mapped[str] = mapped_column(String(6))
-    level3_description: Mapped[str | None] = mapped_column(String(2000))
-    level4: Mapped[str] = mapped_column(String(7))
-    level4_description: Mapped[str | None] = mapped_column(String(2000))
-    level5: Mapped[str] = mapped_column(String(8))
-    frac_code: Mapped[str] = mapped_column(String(4))
-
-
-class HracClassification(Base):
-    """ORM class for hrac_classification."""
-
-    __tablename__ = "hrac_classification"
-    __table_args__ = (
-        PrimaryKeyConstraint("hrac_class_id", name="hrac_classification_pk"),
-        UniqueConstraint("level3", name="uk_hrac_class_l3"),
-    )
-    hrac_class_id: Mapped[int] = mapped_column(BigInteger())
-    active_ingredient: Mapped[str] = mapped_column(String(500))
-    level1: Mapped[str] = mapped_column(String(2))
-    level1_description: Mapped[str] = mapped_column(String(2000))
-    level2: Mapped[str] = mapped_column(String(3))
-    level2_description: Mapped[str | None] = mapped_column(String(2000))
-    level3: Mapped[str] = mapped_column(String(5))
-    hrac_code: Mapped[str] = mapped_column(String(2))
-
-
-class IracClassification(Base):
-    """ORM class for irac_classification."""
-
-    __tablename__ = "irac_classification"
-    __table_args__ = (
-        PrimaryKeyConstraint("irac_class_id", name="irac_classification_pk"),
-        UniqueConstraint("level4", name="uk_irac_class_l4"),
-    )
-    irac_class_id: Mapped[int] = mapped_column(BigInteger())
-    active_ingredient: Mapped[str] = mapped_column(String(500))
-    level1: Mapped[str] = mapped_column(String(1))
-    level1_description: Mapped[str] = mapped_column(String(2000))
-    level2: Mapped[str] = mapped_column(String(3))
-    level2_description: Mapped[str] = mapped_column(String(2000))
-    level3: Mapped[str] = mapped_column(String(6))
-    level3_description: Mapped[str] = mapped_column(String(2000))
-    level4: Mapped[str] = mapped_column(String(8))
-    irac_code: Mapped[str] = mapped_column(String(3))
-
-
-class ResearchStem(Base):
-    """ORM class for research_stem."""
-
-    __tablename__ = "research_stem"
-    __table_args__ = (
-        PrimaryKeyConstraint("res_stem_id", name="pk_res_stem_id"),
-        UniqueConstraint("research_stem", name="uk_res_stem"),
-    )
-    res_stem_id: Mapped[int] = mapped_column(BigInteger())
-    research_stem: Mapped[str | None] = mapped_column(String(20))
-
-
 class OrganismClass(Base):
     """ORM class for organism_class."""
 
@@ -462,10 +389,6 @@ class UsanStems(Base):
     __tablename__ = "usan_stems"
     __table_args__ = (
         PrimaryKeyConstraint("usan_stem_id", name="pk_usan_stems"),
-        CheckConstraint(
-            "major_class IN ('GPCR', 'NR', 'PDE', 'kinase', 'ion channel', 'protease')",
-            name="ck_usan_stems_mc",
-        ),
         UniqueConstraint("stem", "subgroup", name="uk_usan_stems_stemsub"),
     )
     usan_stem_id: Mapped[int] = mapped_column(BigInteger())
@@ -473,7 +396,6 @@ class UsanStems(Base):
     subgroup: Mapped[str | None] = mapped_column(String(100))
     annotation: Mapped[str | None] = mapped_column(String(2000))
     stem_class: Mapped[str | None] = mapped_column(String(100))
-    major_class: Mapped[str | None] = mapped_column(String(100))
 
 
 class Version(Base):
@@ -543,12 +465,12 @@ class Docs(Base):
         ),
         CheckConstraint("year < 2050 AND year > 1900", name="ck_docs_year"),
         UniqueConstraint("chembl_id", name="uk_docs_chemblid"),
-        Index("bmx_doc_iss", "issue"),
-        Index("idx_docs_pmid", "pubmed_id"),
-        Index("bmx_doc_year", "year"),
-        Index("pk_doc_doc_id", "doc_id", unique=True),
-        Index("bmx_doc_jrnl", "journal"),
         Index("bmx_doc_vol", "volume"),
+        Index("bmx_doc_jrnl", "journal"),
+        Index("idx_docs_pmid", "pubmed_id"),
+        Index("pk_doc_doc_id", "doc_id", unique=True),
+        Index("bmx_doc_year", "year"),
+        Index("bmx_doc_iss", "issue"),
     )
     doc_id: Mapped[int] = mapped_column(BigInteger())
     journal: Mapped[str | None] = mapped_column(String(50))
@@ -591,11 +513,11 @@ class TargetDictionary(Base):
         ),
         CheckConstraint("species_group_flag IN (0, 1)", name="ck_targdict_species"),
         UniqueConstraint("chembl_id", name="uk_targdict_chemblid"),
-        Index("idx_td_pname", "pref_name"),
         Index("idx_td_taxid", "tax_id"),
-        Index("idx_td_t_type", "target_type"),
         Index("idx_td_org", "organism"),
         Index("idx_td_chembl_id", "chembl_id"),
+        Index("idx_td_pname", "pref_name"),
+        Index("idx_td_t_type", "target_type"),
     )
     tid: Mapped[int] = mapped_column(BigInteger())
     target_type: Mapped[str | None] = mapped_column(String(30))
@@ -664,10 +586,10 @@ class MoleculeDictionary(Base):
         CheckConstraint("usan_year > 1900 AND usan_year < 2050", name="ck_moldict_usanyear"),
         CheckConstraint("WITHDRAWN_FLAG IN (0, 1)", name="ck_moldict_withd"),
         UniqueConstraint("chembl_id", name="uk_moldict_chemblid"),
-        Index("idx_moldict_ther_flag", "therapeutic_flag"),
         Index("idx_moldict_max_phase", "max_phase"),
-        Index("idx_moldict_pref_name", "pref_name"),
+        Index("idx_moldict_ther_flag", "therapeutic_flag"),
         Index("idx_moldict_chembl_id", "chembl_id", unique=True),
+        Index("idx_moldict_pref_name", "pref_name"),
     )
     molregno: Mapped[int] = mapped_column(BigInteger())
     pref_name: Mapped[str | None] = mapped_column(String(255))
@@ -676,7 +598,6 @@ class MoleculeDictionary(Base):
     therapeutic_flag: Mapped[int] = mapped_column(SmallInteger())
     dosed_ingredient: Mapped[int] = mapped_column(SmallInteger())
     structure_type: Mapped[str] = mapped_column(String(10))
-    chebi_par_id: Mapped[int | None] = mapped_column(BigInteger())
     molecule_type: Mapped[str | None] = mapped_column(String(30))
     first_approval: Mapped[int | None]
     oral: Mapped[int] = mapped_column(SmallInteger())
@@ -694,10 +615,10 @@ class MoleculeDictionary(Base):
     polymer_flag: Mapped[int | None] = mapped_column(SmallInteger())
     usan_substem: Mapped[str | None] = mapped_column(String(50))
     usan_stem_definition: Mapped[str | None] = mapped_column(String(1000))
-    indication_class: Mapped[str | None] = mapped_column(String(1000))
     withdrawn_flag: Mapped[int] = mapped_column(SmallInteger())
     chemical_probe: Mapped[int] = mapped_column(SmallInteger())
     orphan: Mapped[int] = mapped_column(SmallInteger())
+    veterinary: Mapped[int | None] = mapped_column(SmallInteger())
 
 
 class ActivitySupp(Base):
@@ -710,16 +631,16 @@ class ActivitySupp(Base):
             ["smid"], ["activity_smid.smid"], name="fk_act_smids", ondelete="CASCADE"
         ),
         UniqueConstraint("rgid", "type", name="uk_actsupp_rgid_type"),
+        Index("idx_actsupp_val", "value"),
+        Index("idx_actsupp_units", "units"),
+        Index("idx_actsupp_std_text", "standard_text_value"),
+        Index("idx_actsupp_rel", "relation"),
+        Index("idx_actsupp_std_rel", "standard_relation"),
         Index("idx_actsupp_std_val", "standard_value"),
+        Index("idx_actsupp_std_units", "standard_units"),
         Index("idx_actsupp_text", "text_value"),
         Index("idx_actsupp_type", "type"),
-        Index("idx_actsupp_units", "units"),
-        Index("idx_actsupp_val", "value"),
-        Index("idx_actsupp_std_units", "standard_units"),
-        Index("idx_actsupp_std_rel", "standard_relation"),
-        Index("idx_actsupp_rel", "relation"),
         Index("idx_actsupp_std_type", "standard_type"),
-        Index("idx_actsupp_std_text", "standard_text_value"),
     )
     as_id: Mapped[int] = mapped_column(BigInteger())
     rgid: Mapped[int] = mapped_column(BigInteger())
@@ -934,27 +855,6 @@ class ProteinClassSynonyms(Base):
     syn_type: Mapped[str | None] = mapped_column(String(20))
 
 
-class ResearchCompanies(Base):
-    """ORM class for research_companies."""
-
-    __tablename__ = "research_companies"
-    __table_args__ = (
-        PrimaryKeyConstraint("co_stem_id", name="pk_resco_co_stem_id"),
-        ForeignKeyConstraint(
-            ["res_stem_id"],
-            ["research_stem.res_stem_id"],
-            name="fk_resco_res_stem_id",
-            ondelete="CASCADE",
-        ),
-        UniqueConstraint("res_stem_id", "company", name="uk_resco_stem_co"),
-    )
-    co_stem_id: Mapped[int] = mapped_column(BigInteger())
-    res_stem_id: Mapped[int | None] = mapped_column(BigInteger())
-    company: Mapped[str | None] = mapped_column(String(100))
-    country: Mapped[str | None] = mapped_column(String(50))
-    previous_company: Mapped[str | None] = mapped_column(String(100))
-
-
 class Assays(Base):
     """ORM class for assays."""
 
@@ -1031,11 +931,11 @@ class Assays(Base):
         ),
         UniqueConstraint("chembl_id", name="uk_assays_chemblid"),
         Index("idx_assays_desc", "description"),
-        Index("tmp_bao_format", "bao_format"),
         Index("idx_assays_chembl_id", "chembl_id", unique=True),
-        Index("idx_assay_assay_id", "assay_type"),
-        Index("idx_assays_src_id", "src_id"),
         Index("idx_assays_doc_id", "doc_id"),
+        Index("idx_assays_src_id", "src_id"),
+        Index("idx_assay_assay_id", "assay_type"),
+        Index("tmp_bao_format", "bao_format"),
     )
     assay_id: Mapped[int] = mapped_column(BigInteger())
     doc_id: Mapped[int] = mapped_column(BigInteger())
@@ -1082,12 +982,12 @@ class CompoundRecords(Base):
         ForeignKeyConstraint(
             ["src_id"], ["source.src_id"], name="fk_cmpdrec_src_id", ondelete="CASCADE"
         ),
+        Index("fk_comp_rec_molregno", "molregno"),
+        Index("idx_comp_rec_cidx", "cidx"),
         Index("fk_comp_rec_docid", "doc_id"),
         Index("idx_comp_rec_ckey", "compound_key"),
-        Index("idx_comp_rec_cidx", "cidx"),
         Index("idx_comp_rec_srccpid", "src_compound_id"),
         Index("idx_comp_rec_srcid", "src_id"),
-        Index("fk_comp_rec_molregno", "molregno"),
         Index("pk_comp_rec_recid", "record_id", unique=True),
     )
     record_id: Mapped[int] = mapped_column(BigInteger())
@@ -1146,34 +1046,24 @@ class CompoundProperties(Base):
             ondelete="CASCADE",
         ),
         CheckConstraint("aromatic_rings >= 0", name="ck_cmpdprop_aromatic"),
-        CheckConstraint("CX_MOST_BPKA >= 0", name="ck_cmpdprop_bpka"),
         CheckConstraint("full_mwt > 0", name="ck_cmpdprop_fullmw"),
         CheckConstraint("hba >= 0", name="ck_cmpdprop_hba"),
-        CheckConstraint("hba_lipinski >= 0", name="ck_cmpdprop_hba_lip"),
         CheckConstraint("hbd >= 0", name="ck_cmpdprop_hbd"),
-        CheckConstraint("hbd_lipinski >= 0", name="ck_cmpdprop_hbd_lip"),
         CheckConstraint("heavy_atoms >= 0", name="ck_cmpdprop_heavy"),
-        CheckConstraint(
-            "num_lipinski_ro5_violations IN (0, 1, 2, 3, 4)", name="ck_cmpdprop_lip_ro5"
-        ),
         CheckConstraint("mw_freebase > 0", name="ck_cmpdprop_mwfree"),
         CheckConstraint("psa >= 0", name="ck_cmpdprop_psa"),
         CheckConstraint("qed_weighted >= 0", name="ck_cmpdprop_qed"),
         CheckConstraint("ro3_pass IN ('Y', 'N')", name="ck_cmpdprop_ro3"),
         CheckConstraint("num_ro5_violations IN (0, 1, 2, 3, 4)", name="ck_cmpdprop_ro5"),
         CheckConstraint("rtb >= 0", name="ck_cmpdprop_rtb"),
-        CheckConstraint(
-            "molecular_species IN ('ACID', 'BASE', 'ZWITTERION', 'NEUTRAL')",
-            name="ck_cmpdprop_species",
-        ),
-        Index("pk_com_molreg", "molregno", unique=True),
-        Index("idx_cp_mw", "mw_freebase"),
-        Index("idx_cp_hba", "hba"),
-        Index("idx_cp_alogp", "alogp"),
         Index("idx_cp_ro5", "num_ro5_violations"),
-        Index("idx_cp_rtb", "rtb"),
-        Index("idx_cp_hbd", "hbd"),
         Index("idx_cp_psa", "psa"),
+        Index("idx_cp_rtb", "rtb"),
+        Index("idx_cp_alogp", "alogp"),
+        Index("pk_com_molreg", "molregno", unique=True),
+        Index("idx_cp_hba", "hba"),
+        Index("idx_cp_mw", "mw_freebase"),
+        Index("idx_cp_hbd", "hbd"),
     )
     molregno: Mapped[int] = mapped_column(BigInteger())
     mw_freebase: Mapped[float | None] = mapped_column(Numeric(9, 2))
@@ -1184,20 +1074,11 @@ class CompoundProperties(Base):
     rtb: Mapped[int | None]
     ro3_pass: Mapped[str | None] = mapped_column(String(3))
     num_ro5_violations: Mapped[int | None] = mapped_column(SmallInteger())
-    cx_most_apka: Mapped[float | None] = mapped_column(Numeric(9, 2))
-    cx_most_bpka: Mapped[float | None] = mapped_column(Numeric(9, 2))
-    cx_logp: Mapped[float | None] = mapped_column(Numeric(9, 2))
-    cx_logd: Mapped[float | None] = mapped_column(Numeric(9, 2))
-    molecular_species: Mapped[str | None] = mapped_column(String(50))
     full_mwt: Mapped[float | None] = mapped_column(Numeric(9, 2))
     aromatic_rings: Mapped[int | None]
     heavy_atoms: Mapped[int | None]
     qed_weighted: Mapped[float | None] = mapped_column(Numeric(3, 2))
-    mw_monoisotopic: Mapped[float | None] = mapped_column(Numeric(11, 4))
     full_molformula: Mapped[str | None] = mapped_column(String(100))
-    hba_lipinski: Mapped[int | None]
-    hbd_lipinski: Mapped[int | None]
-    num_lipinski_ro5_violations: Mapped[int | None] = mapped_column(SmallInteger())
     np_likeness_score: Mapped[float | None] = mapped_column(Numeric(3, 2))
 
 
@@ -1240,10 +1121,10 @@ class CompoundStructures(Base):
         ),
         UniqueConstraint("standard_inchi", name="uk_cmpdstr_stdinch"),
         UniqueConstraint("standard_inchi_key", name="uk_cmpdstr_stdinchkey"),
-        Index("compound_structures_pk", "molregno", unique=True),
-        Index("idx_cmpdstr_stdinchi", "standard_inchi"),
-        Index("idx_cmpdstr_smiles", "canonical_smiles"),
         Index("idx_cmpdstr_stdkey", "standard_inchi_key"),
+        Index("idx_cmpdstr_smiles", "canonical_smiles"),
+        Index("idx_cmpdstr_stdinchi", "standard_inchi"),
+        Index("compound_structures_pk", "molregno", unique=True),
     )
     molregno: Mapped[int] = mapped_column(BigInteger())
     molfile: Mapped[str | None] = mapped_column(Text())
@@ -1270,31 +1151,6 @@ class MoleculeAtcClassification(Base):
     )
     mol_atc_id: Mapped[int] = mapped_column(BigInteger())
     level5: Mapped[str] = mapped_column(String(10))
-    molregno: Mapped[int] = mapped_column(BigInteger())
-
-
-class MoleculeFracClassification(Base):
-    """ORM class for molecule_frac_classification."""
-
-    __tablename__ = "molecule_frac_classification"
-    __table_args__ = (
-        PrimaryKeyConstraint("mol_frac_id", name="molecule_frac_classificationpk"),
-        ForeignKeyConstraint(
-            ["frac_class_id"],
-            ["frac_classification.frac_class_id"],
-            name="fk_frac_class_id",
-            ondelete="CASCADE",
-        ),
-        ForeignKeyConstraint(
-            ["molregno"],
-            ["molecule_dictionary.molregno"],
-            name="fk_frac_molregno",
-            ondelete="CASCADE",
-        ),
-        UniqueConstraint("frac_class_id", "molregno", name="uk_mol_frac_class"),
-    )
-    mol_frac_id: Mapped[int] = mapped_column(BigInteger())
-    frac_class_id: Mapped[int] = mapped_column(BigInteger())
     molregno: Mapped[int] = mapped_column(BigInteger())
 
 
@@ -1329,56 +1185,6 @@ class MoleculeHierarchy(Base):
     active_molregno: Mapped[int | None] = mapped_column(BigInteger())
 
 
-class MoleculeHracClassification(Base):
-    """ORM class for molecule_hrac_classification."""
-
-    __tablename__ = "molecule_hrac_classification"
-    __table_args__ = (
-        PrimaryKeyConstraint("mol_hrac_id", name="molecule_hrac_classificationpk"),
-        ForeignKeyConstraint(
-            ["hrac_class_id"],
-            ["hrac_classification.hrac_class_id"],
-            name="fk_hrac_class_id",
-            ondelete="CASCADE",
-        ),
-        ForeignKeyConstraint(
-            ["molregno"],
-            ["molecule_dictionary.molregno"],
-            name="fk_hrac_molregno",
-            ondelete="CASCADE",
-        ),
-        UniqueConstraint("hrac_class_id", "molregno", name="uk_mol_hrac_class"),
-    )
-    mol_hrac_id: Mapped[int] = mapped_column(BigInteger())
-    hrac_class_id: Mapped[int] = mapped_column(BigInteger())
-    molregno: Mapped[int] = mapped_column(BigInteger())
-
-
-class MoleculeIracClassification(Base):
-    """ORM class for molecule_irac_classification."""
-
-    __tablename__ = "molecule_irac_classification"
-    __table_args__ = (
-        PrimaryKeyConstraint("mol_irac_id", name="molecule_irac_classificationpk"),
-        ForeignKeyConstraint(
-            ["irac_class_id"],
-            ["irac_classification.irac_class_id"],
-            name="fk_irac_class_id",
-            ondelete="CASCADE",
-        ),
-        ForeignKeyConstraint(
-            ["molregno"],
-            ["molecule_dictionary.molregno"],
-            name="fk_irac_molregno",
-            ondelete="CASCADE",
-        ),
-        UniqueConstraint("irac_class_id", "molregno", name="uk_mol_irac_class"),
-    )
-    mol_irac_id: Mapped[int] = mapped_column(BigInteger())
-    irac_class_id: Mapped[int] = mapped_column(BigInteger())
-    molregno: Mapped[int] = mapped_column(BigInteger())
-
-
 class MoleculeSynonyms(Base):
     """ORM class for molecule_synonyms."""
 
@@ -1391,18 +1197,11 @@ class MoleculeSynonyms(Base):
             name="fk_cmpdsyns_molregno",
             ondelete="CASCADE",
         ),
-        ForeignKeyConstraint(
-            ["res_stem_id"],
-            ["research_stem.res_stem_id"],
-            name="fk_cmpdsyns_resstem",
-            ondelete="CASCADE",
-        ),
         UniqueConstraint("molregno", "syn_type", "synonyms", name="uk_cmpdsyns"),
     )
     molregno: Mapped[int] = mapped_column(BigInteger())
     syn_type: Mapped[str] = mapped_column(String(50))
     molsyn_id: Mapped[int] = mapped_column(BigInteger())
-    res_stem_id: Mapped[int | None] = mapped_column(BigInteger())
     synonyms: Mapped[str | None] = mapped_column(String(250))
 
 
@@ -1502,24 +1301,24 @@ class Activities(Base):
             "standard_relation IN ('>', '<', '=', '~', '<=', '>=', '<<', '>>')",
             name="ck_stand_relation",
         ),
-        Index("fk_act_doc_id", "doc_id"),
-        Index("idx_act_val", "value"),
-        Index("idx_act_units", "units"),
-        Index("fk_act_molregno", "molregno"),
         Index("fk_act_record_id", "record_id"),
-        Index("idx_act_text", "text_value"),
-        Index("idx_act_type", "type"),
-        Index("idx_acc_relation", "standard_relation"),
-        Index("fk_act_assay_id", "assay_id"),
-        Index("idx_act_pchembl", "pchembl_value"),
-        Index("idx_act_rel", "relation"),
-        Index("idx_act_src_id", "src_id"),
-        Index("idx_act_std_text", "standard_text_value"),
-        Index("idx_act_std_type", "standard_type"),
         Index("idx_act_std_unit", "standard_units"),
         Index("idx_act_std_upper", "standard_upper_value"),
+        Index("fk_act_assay_id", "assay_id"),
+        Index("idx_acc_relation", "standard_relation"),
         Index("idx_act_std_val", "standard_value"),
+        Index("idx_act_pchembl", "pchembl_value"),
+        Index("idx_act_text", "text_value"),
+        Index("idx_act_rel", "relation"),
+        Index("idx_act_type", "type"),
+        Index("idx_act_src_id", "src_id"),
+        Index("idx_act_units", "units"),
+        Index("idx_act_val", "value"),
+        Index("fk_act_doc_id", "doc_id"),
+        Index("idx_act_std_text", "standard_text_value"),
         Index("idx_act_upper", "upper_value"),
+        Index("idx_act_std_type", "standard_type"),
+        Index("fk_act_molregno", "molregno"),
     )
     activity_id: Mapped[int] = mapped_column(BigInteger())
     assay_id: Mapped[int] = mapped_column(BigInteger())
@@ -1582,16 +1381,15 @@ class AssayParameters(Base):
         ForeignKeyConstraint(
             ["assay_id"], ["assays.assay_id"], name="fk_assay_param_assayid", ondelete="CASCADE"
         ),
-        UniqueConstraint("assay_id", "type", name="uk_assay_param"),
-        Index("idx_assay_param_std_type", "standard_type"),
-        Index("idx_assay_param_std_rel", "standard_relation"),
-        Index("idx_assay_param_std_val", "standard_value"),
-        Index("idx_assay_param_text", "text_value"),
-        Index("idx_assay_param_rel", "relation"),
-        Index("idx_assay_param_std_text", "standard_text_value"),
-        Index("idx_assay_param_type", "type"),
         Index("idx_assay_param_units", "units"),
         Index("idx_assay_param_std_units", "standard_units"),
+        Index("idx_assay_param_std_rel", "standard_relation"),
+        Index("idx_assay_param_rel", "relation"),
+        Index("idx_assay_param_std_val", "standard_value"),
+        Index("idx_assay_param_std_type", "standard_type"),
+        Index("idx_assay_param_text", "text_value"),
+        Index("idx_assay_param_type", "type"),
+        Index("idx_assay_param_std_text", "standard_text_value"),
         Index("idx_assay_param_val", "value"),
     )
     assay_param_id: Mapped[int] = mapped_column(BigInteger())
@@ -1723,7 +1521,7 @@ class DrugWarning(Base):
 
     __tablename__ = "drug_warning"
     __table_args__ = (
-        PrimaryKeyConstraint("warning_id", name="sys_c00167957"),
+        PrimaryKeyConstraint("warning_id", name="sys_c00183021"),
         ForeignKeyConstraint(
             ["record_id"],
             ["compound_records.record_id"],
@@ -1870,12 +1668,12 @@ class ActivityProperties(Base):
             ondelete="CASCADE",
         ),
         UniqueConstraint("activity_id", "type", name="uk_actprop_id_type"),
-        Index("idx_actprop_type", "standard_type"),
-        Index("idx_act_prop_text", "standard_text_value"),
-        Index("idx_actprop_val", "standard_value"),
-        Index("idx_actprop_resflag", "result_flag"),
         Index("idx_actprop_relation", "standard_relation"),
+        Index("idx_actprop_resflag", "result_flag"),
+        Index("idx_actprop_val", "standard_value"),
+        Index("idx_act_prop_text", "standard_text_value"),
         Index("idx_actprop_units", "standard_units"),
+        Index("idx_actprop_type", "standard_type"),
     )
     ap_id: Mapped[int] = mapped_column(BigInteger())
     activity_id: Mapped[int] = mapped_column(BigInteger())
@@ -1969,13 +1767,13 @@ class MechanismRefs(Base):
             name="ck_mechanism_ref_type",
         ),
         UniqueConstraint("mec_id", "ref_type", "ref_id", name="uk_mechanism_refs"),
-        Index("mechanism_refs_pk", "mecref_id", unique=True),
         Index("mechanism_refs_uk", "mec_id", "ref_type", "ref_id", unique=True),
+        Index("mechanism_refs_pk", "mecref_id", unique=True),
     )
     mecref_id: Mapped[int] = mapped_column(BigInteger())
     mec_id: Mapped[int] = mapped_column(BigInteger())
     ref_type: Mapped[str] = mapped_column(String(50))
-    ref_id: Mapped[str | None] = mapped_column(String(200))
+    ref_id: Mapped[str | None] = mapped_column(String(400))
     ref_url: Mapped[str | None] = mapped_column(String(400))
 
 
@@ -1994,6 +1792,32 @@ class MetabolismRefs(Base):
     met_id: Mapped[int] = mapped_column(BigInteger())
     ref_type: Mapped[str] = mapped_column(String(50))
     ref_id: Mapped[str | None] = mapped_column(String(200))
+    ref_url: Mapped[str | None] = mapped_column(String(400))
+
+
+class PesticideClassification(Base):
+    """ORM class for pesticide_classification."""
+
+    __tablename__ = "pesticide_classification"
+    __table_args__ = (
+        PrimaryKeyConstraint("pest_class_id", name="sys_c00183085"),
+        ForeignKeyConstraint(
+            ["mec_id"], ["drug_mechanism.mec_id"], name="fk_mec_id", ondelete="CASCADE"
+        ),
+        UniqueConstraint(
+            "compound_name",
+            "mec_id",
+            "mechanism_comment",
+            "ref_type",
+            name="uk_compound_mec_meccomment_reftype",
+        ),
+    )
+    pest_class_id: Mapped[int] = mapped_column(BigInteger())
+    compound_name: Mapped[str | None] = mapped_column(String(2000))
+    mec_id: Mapped[int | None] = mapped_column(BigInteger())
+    mechanism_comment: Mapped[str | None] = mapped_column(String(2000))
+    ref_type: Mapped[str | None] = mapped_column(String(50))
+    ref_id: Mapped[str | None] = mapped_column(String(400))
     ref_url: Mapped[str | None] = mapped_column(String(400))
 
 
@@ -2033,7 +1857,7 @@ class WarningRefs(Base):
 
     __tablename__ = "warning_refs"
     __table_args__ = (
-        PrimaryKeyConstraint("warnref_id", name="sys_c00167958"),
+        PrimaryKeyConstraint("warnref_id", name="sys_c00183016"),
         ForeignKeyConstraint(
             ["warning_id"],
             ["drug_warning.warning_id"],
@@ -2046,3 +1870,28 @@ class WarningRefs(Base):
     ref_type: Mapped[str | None] = mapped_column(String(50))
     ref_id: Mapped[str | None] = mapped_column(String(4000))
     ref_url: Mapped[str | None] = mapped_column(String(4000))
+
+
+class PesticideClassMapping(Base):
+    """ORM class for pesticide_class_mapping."""
+
+    __tablename__ = "pesticide_class_mapping"
+    __table_args__ = (
+        PrimaryKeyConstraint("mol_pest_id", name="sys_c00183033"),
+        ForeignKeyConstraint(
+            ["molregno"],
+            ["molecule_dictionary.molregno"],
+            name="fk_pestclass_molregno",
+            ondelete="CASCADE",
+        ),
+        ForeignKeyConstraint(
+            ["pest_class_id"],
+            ["pesticide_classification.pest_class_id"],
+            name="fk_pest_class_id",
+            ondelete="CASCADE",
+        ),
+        UniqueConstraint("pest_class_id", "molregno", name="uk_pestclassid_molregno"),
+    )
+    mol_pest_id: Mapped[int] = mapped_column(BigInteger())
+    pest_class_id: Mapped[int | None] = mapped_column(BigInteger())
+    molregno: Mapped[int | None] = mapped_column(BigInteger())
