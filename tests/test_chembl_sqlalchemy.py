@@ -64,3 +64,10 @@ def test_submodule_import_does_not_warn(recwarn: pytest.WarningsRecorder) -> Non
     importlib.import_module("chembl_sqlalchemy.chembl_35")
 
     assert not [w for w in recwarn.list if issubclass(w.category, DeprecationWarning)]
+
+
+def test_unknown_attribute_raises_attribute_error() -> None:
+    import chembl_sqlalchemy
+
+    with pytest.raises(AttributeError, match="has no attribute 'DoesNotExist'"):
+        chembl_sqlalchemy.DoesNotExist  # noqa: B018
