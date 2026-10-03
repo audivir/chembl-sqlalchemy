@@ -10,100 +10,11 @@ matching the ChEMBL database version in use instead.
 
 from __future__ import annotations
 
+import importlib
 import warnings
+from typing import Any
 
-from chembl_sqlalchemy.chembl_35 import (
-    ActionType,
-    Activities,
-    ActivityProperties,
-    ActivitySmid,
-    ActivityStdsLookup,
-    ActivitySupp,
-    ActivitySuppMap,
-    AssayClassification,
-    AssayClassMap,
-    AssayParameters,
-    Assays,
-    AssayType,
-    AtcClassification,
-    Base,
-    BindingSites,
-    BioassayOntology,
-    BioComponentSequences,
-    BiotherapeuticComponents,
-    Biotherapeutics,
-    CellDictionary,
-    ChemblIdLookup,
-    ChemblRelease,
-    ComponentClass,
-    ComponentDomains,
-    ComponentGo,
-    ComponentSequences,
-    ComponentSynonyms,
-    CompoundProperties,
-    CompoundRecords,
-    CompoundStructuralAlerts,
-    CompoundStructures,
-    ConfidenceScoreLookup,
-    CurationLookup,
-    DataValidityLookup,
-    DefinedDailyDose,
-    Docs,
-    Domains,
-    DrugIndication,
-    DrugMechanism,
-    DrugWarning,
-    Formulations,
-    FracClassification,
-    GoClassification,
-    HracClassification,
-    IndicationRefs,
-    IracClassification,
-    LigandEff,
-    MechanismRefs,
-    Metabolism,
-    MetabolismRefs,
-    MoleculeAtcClassification,
-    MoleculeDictionary,
-    MoleculeFracClassification,
-    MoleculeHierarchy,
-    MoleculeHracClassification,
-    MoleculeIracClassification,
-    MoleculeSynonyms,
-    OrganismClass,
-    PatentUseCodes,
-    PredictedBindingDomains,
-    ProductPatents,
-    Products,
-    ProteinClassification,
-    ProteinClassSynonyms,
-    RelationshipType,
-    ResearchCompanies,
-    ResearchStem,
-    SiteComponents,
-    Source,
-    StructuralAlerts,
-    StructuralAlertSets,
-    TargetComponents,
-    TargetDictionary,
-    TargetRelations,
-    TargetType,
-    TissueDictionary,
-    UsanStems,
-    VariantSequences,
-    Version,
-    WarningRefs,
-)
-
-__version__ = "1.1.0"
-
-warnings.warn(
-    "Importing directly from `chembl_sqlalchemy` is deprecated and resolves to the ChEMBL 35 "
-    "schema. Import from `chembl_sqlalchemy.chembl_35` (or the submodule matching your ChEMBL "
-    "database version) instead. This default will be removed in version 2.0.0.",
-    DeprecationWarning,
-    stacklevel=2,
-)
+__version__ = "1.1.1"
 
 __all__ = [
     "ActionType",
@@ -187,3 +98,18 @@ __all__ = [
     "Version",
     "WarningRefs",
 ]
+
+
+def __getattr__(name: str) -> Any:
+    if name in __all__:
+        warnings.warn(
+            f"Importing `{name}` directly from `chembl_sqlalchemy` is deprecated and resolves "
+            "to the ChEMBL 35 schema. Import from `chembl_sqlalchemy.chembl_35` (or the "
+            "submodule matching your ChEMBL database version) instead. This default will be "
+            "removed in version 2.0.0.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        module = importlib.import_module("chembl_sqlalchemy.chembl_35")
+        return getattr(module, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

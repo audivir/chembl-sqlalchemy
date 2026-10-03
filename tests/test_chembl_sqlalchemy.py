@@ -51,7 +51,16 @@ def test_top_level_import_is_deprecated_and_resolves_to_chembl_35() -> None:
     import chembl_sqlalchemy
 
     with pytest.warns(DeprecationWarning, match="chembl_sqlalchemy.chembl_35"):
-        importlib.reload(chembl_sqlalchemy)
+        action_type = chembl_sqlalchemy.ActionType
 
-    assert chembl_sqlalchemy.ActionType is ActionType
-    assert chembl_sqlalchemy.Base is Base
+    with pytest.warns(DeprecationWarning, match="chembl_sqlalchemy.chembl_35"):
+        base = chembl_sqlalchemy.Base
+
+    assert action_type is ActionType
+    assert base is Base
+
+
+def test_submodule_import_does_not_warn(recwarn: pytest.WarningsRecorder) -> None:
+    importlib.import_module("chembl_sqlalchemy.chembl_35")
+
+    assert not [w for w in recwarn.list if issubclass(w.category, DeprecationWarning)]
