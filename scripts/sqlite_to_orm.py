@@ -42,7 +42,7 @@ def parse_varchar(kind: DataType) -> tuple[str, str]:
 def parse_decimal(kind: DataType) -> tuple[str, str]:
     """Parse DECIMAL to Numeric() and DECIMAL(10, 2) to Numeric(10, 2)."""
     if not kind.expressions:
-        return "float", ""
+        return "float", "Numeric()"
     if len(kind.expressions) != 2:  # noqa: PLR2004
         raise ValueError(f"Invalid decimal args: {kind.expressions}")
     prec: str = kind.expressions[0].this.this

@@ -724,12 +724,12 @@ class ActivitySupp(Base):
     smid: Mapped[int | None] = mapped_column(BigInteger())
     type: Mapped[str] = mapped_column(String(250))
     relation: Mapped[str | None] = mapped_column(String(50))
-    value: Mapped[float | None]
+    value: Mapped[float | None] = mapped_column(Numeric())
     units: Mapped[str | None] = mapped_column(String(100))
     text_value: Mapped[str | None] = mapped_column(String(1000))
     standard_type: Mapped[str | None] = mapped_column(String(250))
     standard_relation: Mapped[str | None] = mapped_column(String(50))
-    standard_value: Mapped[float | None]
+    standard_value: Mapped[float | None] = mapped_column(Numeric())
     standard_units: Mapped[str | None] = mapped_column(String(100))
     standard_text_value: Mapped[str | None] = mapped_column(String(1000))
     comments: Mapped[str | None] = mapped_column(String(4000))
@@ -867,7 +867,7 @@ class DefinedDailyDose(Base):
     ddd_admr: Mapped[str | None] = mapped_column(String(1000))
     ddd_comment: Mapped[str | None] = mapped_column(String(2000))
     ddd_id: Mapped[int] = mapped_column(BigInteger())
-    ddd_value: Mapped[float | None]
+    ddd_value: Mapped[float | None] = mapped_column(Numeric())
 
 
 class ProductPatents(Base):
@@ -1525,7 +1525,7 @@ class Activities(Base):
     record_id: Mapped[int] = mapped_column(BigInteger())
     molregno: Mapped[int | None] = mapped_column(BigInteger())
     standard_relation: Mapped[str | None] = mapped_column(String(50))
-    standard_value: Mapped[float | None]
+    standard_value: Mapped[float | None] = mapped_column(Numeric())
     standard_units: Mapped[str | None] = mapped_column(String(100))
     standard_flag: Mapped[int | None] = mapped_column(SmallInteger())
     standard_type: Mapped[str | None] = mapped_column(String(250))
@@ -1537,12 +1537,12 @@ class Activities(Base):
     uo_units: Mapped[str | None] = mapped_column(String(10))
     qudt_units: Mapped[str | None] = mapped_column(String(70))
     toid: Mapped[int | None]
-    upper_value: Mapped[float | None]
-    standard_upper_value: Mapped[float | None]
+    upper_value: Mapped[float | None] = mapped_column(Numeric())
+    standard_upper_value: Mapped[float | None] = mapped_column(Numeric())
     src_id: Mapped[int | None]
     type: Mapped[str] = mapped_column(String(250))
     relation: Mapped[str | None] = mapped_column(String(50))
-    value: Mapped[float | None]
+    value: Mapped[float | None] = mapped_column(Numeric())
     units: Mapped[str | None] = mapped_column(String(100))
     text_value: Mapped[str | None] = mapped_column(String(1000))
     standard_text_value: Mapped[str | None] = mapped_column(String(1000))
@@ -1596,12 +1596,12 @@ class AssayParameters(Base):
     assay_id: Mapped[int] = mapped_column(BigInteger())
     type: Mapped[str] = mapped_column(String(250))
     relation: Mapped[str | None] = mapped_column(String(50))
-    value: Mapped[float | None]
+    value: Mapped[float | None] = mapped_column(Numeric())
     units: Mapped[str | None] = mapped_column(String(100))
     text_value: Mapped[str | None] = mapped_column(String(4000))
     standard_type: Mapped[str | None] = mapped_column(String(250))
     standard_relation: Mapped[str | None] = mapped_column(String(50))
-    standard_value: Mapped[float | None]
+    standard_value: Mapped[float | None] = mapped_column(Numeric())
     standard_units: Mapped[str | None] = mapped_column(String(100))
     standard_text_value: Mapped[str | None] = mapped_column(String(4000))
     comments: Mapped[str | None] = mapped_column(String(4000))
@@ -1879,12 +1879,12 @@ class ActivityProperties(Base):
     activity_id: Mapped[int] = mapped_column(BigInteger())
     type: Mapped[str] = mapped_column(String(250))
     relation: Mapped[str | None] = mapped_column(String(50))
-    value: Mapped[float | None]
+    value: Mapped[float | None] = mapped_column(Numeric())
     units: Mapped[str | None] = mapped_column(String(100))
     text_value: Mapped[str | None] = mapped_column(String(2000))
     standard_type: Mapped[str | None] = mapped_column(String(250))
     standard_relation: Mapped[str | None] = mapped_column(String(50))
-    standard_value: Mapped[float | None]
+    standard_value: Mapped[float | None] = mapped_column(Numeric())
     standard_units: Mapped[str | None] = mapped_column(String(100))
     standard_text_value: Mapped[str | None] = mapped_column(String(2000))
     comments: Mapped[str | None] = mapped_column(String(2000))

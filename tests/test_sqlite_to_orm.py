@@ -59,7 +59,7 @@ class TestParseDecimal:
         )
 
     def test_bare_decimal_has_no_args(self) -> None:
-        assert parse_decimal(_column_kind("CREATE TABLE t (c DECIMAL)")) == ("float", "")
+        assert parse_decimal(_column_kind("CREATE TABLE t (c DECIMAL)")) == ("float", "Numeric()")
 
     def test_rejects_wrong_arg_count(self) -> None:
         with pytest.raises(ValueError, match="Invalid decimal args"):
