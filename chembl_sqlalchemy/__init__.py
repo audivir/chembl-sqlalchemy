@@ -16,6 +16,8 @@ from typing import Any
 
 __version__ = "1.1.1"
 
+_SCHEMA_SUBMODULES = ("chembl_35", "chembl_36", "chembl_37")
+
 __all__ = [
     "ActionType",
     "Activities",
@@ -101,6 +103,8 @@ __all__ = [
 
 
 def __getattr__(name: str) -> Any:
+    if name in _SCHEMA_SUBMODULES:
+        return importlib.import_module(f"chembl_sqlalchemy.{name}")
     if name in __all__:
         warnings.warn(
             f"Importing `{name}` directly from `chembl_sqlalchemy` is deprecated and resolves "

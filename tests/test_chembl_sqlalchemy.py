@@ -66,6 +66,15 @@ def test_submodule_import_does_not_warn(recwarn: pytest.WarningsRecorder) -> Non
     assert not [w for w in recwarn.list if issubclass(w.category, DeprecationWarning)]
 
 
+def test_submodule_attribute_access_does_not_warn(recwarn: pytest.WarningsRecorder) -> None:
+    import chembl_sqlalchemy
+
+    module = chembl_sqlalchemy.__getattr__("chembl_36")
+
+    assert module is importlib.import_module("chembl_sqlalchemy.chembl_36")
+    assert not [w for w in recwarn.list if issubclass(w.category, DeprecationWarning)]
+
+
 def test_unknown_attribute_raises_attribute_error() -> None:
     import chembl_sqlalchemy
 
